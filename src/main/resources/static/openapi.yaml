@@ -1,0 +1,427 @@
+openapi: 3.0.3
+info:
+  version: '1.0'
+  title: Product Service - Fast Food Tech Challenge
+  description: 'API para gerenciamento de produtos no sistema de autoatendimento da rede de fast food.'
+  license:
+    url: https://opensource.org/licenses/MIT
+    name: MIT License
+servers:
+  - url: http://localhost:8080 # Ajuste a URL base se necessário para o Product Service
+    description: Localhost Product Service
+paths:
+  /products:
+    get:
+      tags:
+        - Product
+      summary: Buscar produtos
+      description: |
+        Retorna uma lista de produtos ativos.
+        - Se nenhum parâmetro for fornecido, retorna todos os produtos ativos.
+        - É possível filtrar por `category` para obter produtos de uma categoria específica.
+        - É possível buscar por `sku` específico.
+      operationId: getProduct
+      parameters:
+        - $ref: '#/components/parameters/SKUParam'
+        - $ref: '#/components/parameters/CategoryParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProductListResponse' # Esta resposta agora usa $ref para Product
+        '400':
+          description: Requisição inválida (categoria inválida)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno ao buscar produtos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 500
+                message: Internal Server Error
+                errors:
+                  - Ocorreu um erro inesperado ao processar sua solicitação.
+    post:
+      tags:
+        - Product
+      summary: Criar um novo produto
+      description: Cria um novo produto no catálogo, exigindo dados como nome, SKU, preço e categoria.
+      operationId: postProducts
+      requestBody:
+        $ref: '#/components/requestBodies/ProductCreateRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/CreateProductResponse'
+        '400':
+          description: Dados inválidos (preço negativo, SKU faltando).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 400
+                message: Bad Request
+                errors:
+                  - O preço do produto não pode ser menor ou igual a zero
+        '409':
+          description: Conflito (SKU já existente).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 409
+                message: Conflict
+                errors:
+                  - SKU: BURGUER-001 já existe
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 500
+                message: Internal Server Error
+                errors:
+                  - Erro ao tentar salvar o produto no banco de dados.
+  /products/{productId}:
+    get:
+      tags:
+        - Product
+      summary: Buscar um produto por ID
+      description: Retorna os detalhes de um produto específico com base no seu `productId`.
+      operationId: getProductById
+      parameters:
+        - name: productId
+          in: path
+          description: ID único do produto a ser buscado.
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Produto encontrado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Produto não encontrado com o ID fornecido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 404
+                message: Not Found
+                errors:
+                  - Product not found with ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        '500':
+          description: Erro interno no servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Product
+      summary: Atualizar um produto
+      description: Atualiza os dados de um produto existente com base no seu `productId`. O SKU não pode ser alterado.
+      operationId: putProducts
+      parameters:
+        - name: productId
+          in: path
+          description: ID único do produto a ser atualizado.
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        $ref: '#/components/requestBodies/ProductUpdateRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/UpdateProductResponse'
+        '400':
+          description: Dados inválidos (preço negativo).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 400
+                message: Bad Request
+                errors:
+                  - O preço do produto não pode ser nulo
+        '404':
+          description: Produto não encontrado com o ID fornecido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 404
+                message: Not Found
+                errors:
+                  - Product not found with ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        '500':
+          description: Erro interno no servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 500
+                message: Internal Server Error
+                errors:
+                  - Falha ao atualizar o produto. Tente novamente mais tarde.
+    delete:
+      tags:
+        - Product
+      summary: Inativar um produto
+      description: |
+        Realiza a inativação (soft delete) de um produto, tornando-o indisponível para novos pedidos.
+        A operação é lógica e não remove o registro do banco de dados.
+      operationId: deleteProducts
+      parameters:
+        - name: productId
+          in: path
+          description: ID único do produto a ser inativado.
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Produto inativado com sucesso.
+        '404':
+          description: Produto não encontrado com o ID fornecido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 404
+                message: Not Found
+                errors:
+                  - Product not found with ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        '500':
+          description: Erro interno no servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 500
+                message: Internal Server Error
+                errors:
+                  - Erro ao tentar inativar o produto.
+tags:
+  - name: Product
+    description: Operações relacionadas ao gerenciamento de produtos
+components:
+  parameters:
+    CategoryParam:
+      name: category
+      in: query
+      description: Filtra produtos pela categoria especificada.
+      required: false
+      schema:
+        $ref: '#/components/schemas/ProductCategory'
+    SKUParam:
+      name: sku
+      in: query
+      description: Filtra produto pelo SKU (Stock Keeping Unit) exato.
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+  requestBodies:
+    ProductCreateRequest:
+      description: Dados necessários para criar um novo produto.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              sku:
+                type: string
+                description: Código único do produto (Stock Keeping Unit).
+                maxLength: 16
+                example: "SNACK001"
+              name:
+                type: string
+                description: Nome do produto.
+                example: "X-Burger Clássico"
+              price:
+                $ref: '#/components/schemas/Money'
+              description:
+                type: string
+                description: Descrição detalhada do produto.
+                example: "Hambúrguer artesanal com carne bovina..."
+              image:
+                type: string
+                format: url
+                description: URL da imagem do produto.
+                example: "https://exemplo.com/images/x-burger-classico.jpg"
+              category:
+                $ref: '#/components/schemas/ProductCategory'
+            required:
+              - sku
+              - name
+              - price
+              - description
+              - image
+              - category
+    ProductUpdateRequest:
+      description: Dados para atualizar um produto existente. SKU não pode ser alterado.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Novo nome do produto.
+                example: "X-Burger Clássico Premium"
+              price:
+                $ref: '#/components/schemas/Money'
+              description:
+                type: string
+                description: Nova descrição do produto.
+                example: "Hambúrguer artesanal com carne angus..."
+              image:
+                type: string
+                format: url
+                description: Nova URL da imagem do produto.
+                example: "https://exemplo.com/images/x-burger-premium.jpg"
+              category:
+                $ref: '#/components/schemas/ProductCategory'
+  responses:
+    ProductListResponse:
+      description: Lista de produtos encontrados. Retorna array vazio se nenhum for encontrado.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Product'
+    CreateProductResponse:
+      description: Resposta após a criação bem-sucedida de um produto.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                $ref: '#/components/schemas/UUID'
+            required:
+              - id
+          examples:
+            Example1:
+              value:
+                id: "456e7890-f12a-34b5-c678-901234567890"
+    UpdateProductResponse:
+      description: Resposta com os dados atualizados do produto.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Product' # Referencia o schema Product
+    ErrorResponse:
+      description: Resposta padrão para erros.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    UUID:
+      type: string
+      title: UUID
+      description: Identificador único universal no formato UUID.
+      format: uuid
+      example: "241fae7b-0210-4d29-a928-90653c9a9a89"
+    Money:
+      type: number
+      title: Money
+      description: Valor monetário positivo.
+      format: double
+      minimum: 0.01
+      example: 25.90
+    ProductCategory:
+      type: string
+      title: ProductCategory
+      description: Categoria do produto.
+      enum:
+        - SNACK
+        - DRINK
+        - DESSERT
+        - SIDE_DISH
+      example: SNACK
+    Product:
+      type: object
+      title: Product
+      description: Representa um produto do catálogo.
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        sku:
+          type: string
+          description: Código único do produto.
+          maxLength: 16
+          example: "SNACK001"
+        active:
+          type: boolean
+          description: Indica se o produto está ativo e disponível para venda.
+          example: true
+        name:
+          type: string
+          description: Nome do produto.
+          example: "X-Burger Clássico"
+        price:
+          $ref: '#/components/schemas/Money'
+        description:
+          type: string
+          description: Descrição detalhada do produto.
+          example: "Hambúrguer artesanal com carne bovina..."
+        image:
+          type: string
+          format: url
+          description: URL da imagem do produto.
+          example: "https://exemplo.com/images/x-burger-classico.jpg"
+        category:
+          $ref: '#/components/schemas/ProductCategory'
+      required:
+        - id
+        - sku
+        - active
+        - name
+        - price
+        - description
+        - image
+        - category
+    ErrorResponse:
+      type: object
+      title: ErrorResponse
+      description: Estrutura padrão para respostas de erro.
+      properties:
+        status:
+          type: integer
+          description: Código de status HTTP.
+          example: 400
+        message:
+          type: string
+          description: Mensagem geral sobre o erro.
+          example: "Bad Request"
+        errors:
+          type: array
+          description: Lista de mensagens de erro específicas.
+          items:
+            type: string
+          example: ["O preço do produto não pode ser menor ou igual a zero"]
+      required:
+        - status
+        - message
+        - errors

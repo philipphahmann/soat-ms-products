@@ -1,0 +1,61 @@
+version: '3.9'
+
+services:
+  ms-products:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ms-products-app
+    container_name: ms-products
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://products-db:5432/${DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASS}
+
+      - SPRING_FLYWAY_URL=jdbc:postgresql://products-db:5432/${DB_NAME}
+      - SPRING_FLYWAY_USER=${DB_USER}
+      - SPRING_FLYWAY_PASSWORD=${DB_PASS}
+    depends_on:
+      products-db:
+        condition: service_healthy
+    networks:
+      - soat-net
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  products-db:
+    image: postgres:15-alpine
+    container_name: products-db
+    environment:
+      - POSTGRES_DB=${DB_NAME:-products_db}
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASS:-mysecretpassword}
+    ports:
+      - "5433:5432"
+    networks:
+      - soat-net
+    volumes:
+      - products-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-products_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  soat-net:
+    driver: bridge
+    name: soat-net
+
+volumes:
+  products-db-data:
+    name: products-db-data
