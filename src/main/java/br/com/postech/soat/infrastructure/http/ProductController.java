@@ -58,7 +58,7 @@ public class ProductController implements ProductApi {
     }
 
     @Override
-    public ResponseEntity<ProductDto> getProductById(@PathVariable("productId") UUID productId) {
+    public ResponseEntity<ProductDto> getProductById(UUID productId) {
         Product product = findProductByIdUseCase.execute(productId);
         return ResponseEntity.ok(productWebMapper.toResponse(product));
     }
