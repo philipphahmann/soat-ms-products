@@ -20,6 +20,6 @@ WORKDIR /app
 
 EXPOSE 8080
 
-COPY --from=build /app/target/ms-products-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/product-service-0.0.1-SNAPSHOT.jar app.jar
 
 ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=80.0", "-jar", "app.jar"]

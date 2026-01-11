@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: product-service
+  namespace: soat-products
+data:
+  SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}

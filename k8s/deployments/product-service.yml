@@ -1,17 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: products-app
-  namespace: products
+  name: product-service
+  namespace: soat-products
+  labels:
+    app: product-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: products-app
+      app: product-service
   template:
     metadata:
       labels:
-        app: products-app
+        app: product-service
     spec:
       containers:
         - name: ms-products
@@ -28,9 +30,9 @@ spec:
               memory: "1Gi"
           envFrom:
             - configMapRef:
-                name: products-app
+                name: product-service
             - secretRef:
-                name: products-app
+                name: product-service
           startupProbe:
             httpGet:
               path: /health

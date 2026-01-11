@@ -6,16 +6,16 @@ spring:
   cloud:
     aws:
       credentials:
-        access-key: ${AWS_ACCESS_KEY:accesskey}
-        secret-key: ${AWS_SECRET_KEY:secretkey}
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
       region:
-        static: ${AWS_REGION:us-east-1}
+        static: ${AWS_REGION}
   application:
     name: product-service
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://soat-rds-instance-ms-products.cyxjxfysr67a.us-east-1.rds.amazonaws.com:5432/soat}
-    username: ${SPRING_DATASOURCE_USERNAME:soatadmin}
-    password: ${SPRING_DATASOURCE_PASSWORD:123456789}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     show-sql: ${DB_SHOW_SQL:true}

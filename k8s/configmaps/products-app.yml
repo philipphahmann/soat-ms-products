@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: products-app
-  namespace: products
-data:
-  DB_URL: ${SPRING_DATASOURCE_URL}
