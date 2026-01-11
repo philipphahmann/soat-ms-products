@@ -118,9 +118,9 @@ jobs:
       - name: 5. Aplicar o Deploy no EKS (com envsubst)
         env:
           K8S_IMAGE_TAG: ${{ needs.build_and_push_ecr.outputs.image_uri_digest }}
-          SPRING_DATASOURCE_USERNAME: ${{ secrets.DB_USER_B64 }}
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASS_B64 }}
-          SPRING_DATASOURCE_URL: "jdbc:postgresql://soat-rds-instance-ms-products.cyxjxfysr67a.us-east-1.rds.amazonaws.com:5432/soat"
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
         run: |
           set -e
           
@@ -134,3 +134,9 @@ jobs:
           
           echo "Aplicando Kustomization (todos os manifestos)..."
           kubectl apply -k k8s/
+
+          echo "Forçando reinicialização para garantir novas configs..."
+          kubectl rollout restart deployment/product-service -n soat-products
+
+          echo "Aguardando confirmação de sucesso do deploy..."
+          kubectl rollout status deployment/product-service -n soat-products --timeout=120s

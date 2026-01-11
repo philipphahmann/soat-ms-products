@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>br.com.postech</groupId>
-    <artifactId>ms-products</artifactId>
+    <artifactId>product-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>product-service</name>
@@ -23,7 +23,7 @@
         <lombok.version>1.18.38</lombok.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <sonar.organization>philipphahmann</sonar.organization>
-        <sonar.projectKey>philipphahmann_ms-products</sonar.projectKey>
+        <sonar.projectKey>philipphahmann_product-service</sonar.projectKey>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
         <sonar.coverage.exclusions>
